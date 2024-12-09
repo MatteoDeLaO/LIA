@@ -1,104 +1,101 @@
-#include <IRremote.h> 
+#include <IRremote.h>  // Include the IRremote library for receiving IR signals
 
-// Define the pin connected to the IR receiver 
+// Define the pin connected to the IR receiver
 const int IR_RECEIVE_PIN = 9; 
 
-// Variable to store the time of the last received signal 
+// Variable to store the last time a signal was received
 long lastsignalTime = 0;
-  
+
+// Setup function to initialize the IR receiver and motor control pins
 void setup() { 
-    // Initialize serial communication at 9600 baud rate
-    Serial.begin(9600); 
-
-    // Initialize the IR receiver on the defined pin with feedback enabled
-    IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK); 
-
-    // Print a message to the serial monitor indicating that the IR receiver is initialized
-    Serial.println("IR Receiver Initialized. Waiting for input..."); 
-
-    // Set pin modes for the motor control pins
-    pinMode (7, OUTPUT); // Motor direction pin 1
-    pinMode (5, OUTPUT); // Motor speed pin 1
-    pinMode (8, OUTPUT); // Motor direction pin 2
-    pinMode (3, OUTPUT); // Motor speed pin 2
-    pinMode (6, OUTPUT); 
+    Serial.begin(9600);  // Initialize the serial communication at a baud rate of 9600
+    IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);  // Initialize the IR receiver with feedback LED enabled
+    Serial.println("IR Receiver Initialized. Waiting for input...");  // Print a message to the Serial Monitor
+  
+    // Set motor control pins as output
+    pinMode(7, OUTPUT);  // Left motor forward pin
+    pinMode(5, OUTPUT);  // Left motor speed pin
+    pinMode(8, OUTPUT);  // Right motor forward pin
+    pinMode(3, OUTPUT);  // Enable pin for motor driver
+    pinMode(6, OUTPUT);  // Right motor speed pin
 } 
 
+// Loop function that continuously checks for IR signals and responds accordingly
 void loop() { 
-    // Check if an IR signal is received
+    // Check if a signal has been received by the IR receiver
     if (IrReceiver.decode()) { 
-        // Print the received HEX value to the serial monitor
+        // Print the received IR signal's HEX value to the Serial Monitor
         Serial.print("Received HEX Value: 0x"); 
         Serial.println(IrReceiver.decodedIRData.decodedRawData, HEX); 
 
-        // Resume the IR receiver to prepare for the next signal
+        // Prepare to receive the next signal
         IrReceiver.resume(); 
-    } 
+    }
 
-    // Check the command received from the IR remote and perform corresponding actions
-    if (IrReceiver.decodedIRData.command == 0x46) { // Forward command
-        lastsignalTime = millis(); // Update the time of last signal
-        forward(100); // Move forward with speed 100
+    // Check which command was received and perform corresponding action
+    if (IrReceiver.decodedIRData.command == 0x46) {  // Forward command
+        lastsignalTime = millis();  // Update the time of the last signal
+        forward(100);  // Call the forward function with speed 100
     } 
-    else if (IrReceiver.decodedIRData.command == 0X15) { // Backward command
-        lastsignalTime = millis(); // Update the time of last signal
-        backwards(100); // Move backward with speed 100
+    else if (IrReceiver.decodedIRData.command == 0X15) {  // Backward command
+        lastsignalTime = millis();  // Update the time of the last signal
+        backwards(100);  // Call the backwards function with speed 100
     }
-    else if (IrReceiver.decodedIRData.command == 0X44) { // Left command
-        lastsignalTime = millis(); // Update the time of last signal
-        left(100); // Turn left with speed 100
+    else if (IrReceiver.decodedIRData.command == 0X44) {  // Left command
+        lastsignalTime = millis();  // Update the time of the last signal
+        left(100);  // Call the left function with speed 100
     }
-    else if (IrReceiver.decodedIRData.command == 0X43) { // Right command
-        lastsignalTime = millis(); // Update the time of last signal
-        right(100); // Turn right with speed 100
+    else if (IrReceiver.decodedIRData.command == 0X43) {  // Right command
+        lastsignalTime = millis();  // Update the time of the last signal
+        right(100);  // Call the right function with speed 100
     }
-    else if (IrReceiver.decodedIRData.command == 0X40) { // Stop command
-        lastsignalTime = millis(); // Update the time of last signal
-        stop(); // Stop the motors
+    else if (IrReceiver.decodedIRData.command == 0X40) {  // Stop command
+        lastsignalTime = millis();  // Update the time of the last signal
+        stop();  // Call the stop function to halt the motors
     }
 }
 
-// Function to move the vehicle forward with a given speed
+// Function to move the robot forward with a given speed
 void forward(int x) {
-    digitalWrite(7, 1); // Set motor direction pin 1 to forward
-    analogWrite(5, x); // Set motor speed pin 1 to speed 'x'
-    digitalWrite(8, 1); // Set motor direction pin 2 to forward
-    analogWrite(6, x); // Set motor speed pin 2 to speed 'x'
-    digitalWrite(3, 1); 
+    digitalWrite(7, 1);  // Set the left motor forward pin HIGH
+    analogWrite(5, x);  // Set the left motor speed using PWM
+    digitalWrite(8, 1);  // Set the right motor forward pin HIGH
+    analogWrite(6, x);  // Set the right motor speed using PWM
+    digitalWrite(3, 1);  // Enable the motor driver
 }
 
-// Function to stop the vehicle
+// Function to stop the robot's movement
 void stop() {
-    digitalWrite(7, 0); // Set motor direction pin 1 to stop
-    analogWrite(5, 0); // Set motor speed pin 1 to 0 (stop)
-    digitalWrite(8, 0); // Set motor direction pin 2 to stop
-    analogWrite(6, 0); // Set motor speed pin 2 to 0 (stop)
-    digitalWrite(3, 1);
+    digitalWrite(7, 0);  // Set the left motor forward pin LOW (stop movement)
+    analogWrite(5, 0);  // Set the left motor speed to 0 (stop motor)
+    digitalWrite(8, 0);  // Set the right motor forward pin LOW (stop movement)
+    analogWrite(6, 0);  // Set the right motor speed to 0 (stop motor)
+    digitalWrite(3, 1);  // Keep the motor driver enabled
 }
 
-// Function to move the vehicle backward with a given speed
+// Function to move the robot backward with a given speed
 void backwards(int x) {
-    digitalWrite(7, 0); // Set motor direction pin 1 to backward
-    analogWrite(5, x); // Set motor speed pin 1 to speed 'x'
-    digitalWrite(8, 0); // Set motor direction pin 2 to backward
-    analogWrite(6, x); // Set motor speed pin 2 to speed 'x'
-    digitalWrite(3, 1); 
+    digitalWrite(7, 0);  // Set the left motor forward pin LOW (move backward)
+    analogWrite(5, x);  // Set the left motor speed using PWM
+    digitalWrite(8, 0);  // Set the right motor forward pin LOW (move backward)
+    analogWrite(6, x);  // Set the right motor speed using PWM
+    digitalWrite(3, 1);  // Enable the motor driver
 }
 
-// Function to turn the vehicle right with a given speed
+// Function to turn the robot to the right with a given speed
 void right(int x) {
-    digitalWrite(7, 0); // Set motor direction pin 1 to stop
-    analogWrite(5, x); // Set motor speed pin 1 to speed 'x'
-    digitalWrite(8, 1); // Set motor direction pin 2 to forward (right turn)
-    analogWrite(6, x); // Set motor speed pin 2 to speed 'x'
-    digitalWrite(3, 1); 
+    digitalWrite(7, 0);  // Set the left motor forward pin LOW (stop left motor)
+    analogWrite(5, x);  // Set the left motor speed to 0 (slow or stop motor)
+    digitalWrite(8, 1);  // Set the right motor forward pin HIGH (move right motor)
+    analogWrite(6, x);  // Set the right motor speed using PWM
+    digitalWrite(3, 1);  // Enable the motor driver
 }
 
-// Function to turn the vehicle left with a given speed
+// Function to turn the robot to the left with a given speed
 void left(int x) {
-    digitalWrite(7, 1); // Set motor direction pin 1 to forward (left turn)
-    analogWrite(5, x); // Set motor speed pin 1 to speed 'x'
-    digitalWrite(8, 0); // Set motor direction pin 2 to stop
-    analogWrite(6, x); // Set motor speed pin 2 to speed 'x'
-    digitalWrite(3, 1); 
+    digitalWrite(7, 1);  // Set the left motor forward pin HIGH (move left motor)
+    analogWrite(5, x);  // Set the left motor speed using PWM
+    digitalWrite(8, 0);  // Set the right motor forward pin LOW (stop right motor)
+    analogWrite(6, x);  // Set the right motor speed to 0 (slow or stop motor)
+    digitalWrite(3, 1);  // Enable the motor driver
 }
